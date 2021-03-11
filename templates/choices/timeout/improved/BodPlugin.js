@@ -1,10 +1,10 @@
 const _ = require('lodash');
 
 module.exports = (details) => ({
-    name: 'BodPlugin',
-    extensions: 'java',
-    path: `src.main.java.${details.folderStructure}.${details.pluginName.toLowerCase()}`,
-    content: `package ${details.folderStructure}.${details.pluginName.toLowerCase()};
+            name: 'BodPlugin',
+            extensions: 'java',
+            path: `src.main.java.${details.folderStructure}.${details.pluginName.toLowerCase()}`,
+            content: `package ${details.folderStructure}.${details.pluginName.toLowerCase()};
 
 import com.google.inject.Injector;
 import com.google.inject.Provides;
@@ -79,6 +79,8 @@ public class ${details.pluginName}Plugin extends Plugin
     public static int tickLength;
     public static int timeout;
     public static String status = "starting...";
+    public static ConditionTimeout conditionTimeout;
+    public static boolean timeoutFinished;
 
     @Provides
     ${details.pluginName}Config provideConfig(ConfigManager configManager)
@@ -194,6 +196,26 @@ public class ${details.pluginName}Plugin extends Plugin
             {
                 status = task.getTaskDescription();
                 task.onGameTick(event);
+
+                if (timeoutFinished)
+                {
+                    if (timeout > 0)
+                    {
+                        return;
+                    }
+
+                    Task newTask = tasks.getValidTask();
+                    if (newTask != null)
+                    {
+                        newTask.onGameTick(event);
+                        status = task.getTaskDescription();
+                    } else
+                    {
+                        status = "Idle";
+                    }
+
+                    timeoutFinished = false;
+                }
             }
             else
             {
